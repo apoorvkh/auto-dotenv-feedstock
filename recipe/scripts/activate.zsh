@@ -19,7 +19,7 @@ dotenv_keys=(${(s/ /)dotenv_keys})
 
 # Preserve environment variables
 if (( ! ${+dotenv_stack} )); then
-    declare -A dotenv_stack
+    declare -A -x dotenv_stack
 fi
 
 ## preserve every new .env key
@@ -27,7 +27,7 @@ for key in $dotenv_keys; do
     if [[ ! ${(k)dotenv_stack[$key]} ]]; then
         dotenv_stack[$key]=${(P)key}
     fi
-done; unset key
+done
 
 ## reset every preserved key that is not in .env
 for key in ${(@k)dotenv_stack}; do
@@ -35,9 +35,8 @@ for key in ${(@k)dotenv_stack}; do
         export $key=$dotenv_stack[$key]
         unset "dotenv_stack[$key]"
     fi
-done; unset key
+done
 
-unset dotenv_keys
 
 # Load new environment variables
 source ./.env

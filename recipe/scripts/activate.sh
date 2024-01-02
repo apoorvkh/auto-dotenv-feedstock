@@ -15,7 +15,7 @@ if [ ! -e "./.env" ]; then
 fi
 
 # Parse .env file
-unset dotenv_keys && declare -A dotenv_keys
+declare -A dotenv_keys
 for key in $(
     sed \
     -e 's/^[[:space:]]*//' \
@@ -28,16 +28,14 @@ for key in $(
 done
 
 # Preserve environment variables
-if [ ! -v "dotenv_stack" ];  then
-    declare -A dotenv_stack
-fi
+declare -A dotenv_stack
 
 ## preserve every new .env key
 for key in ${!dotenv_keys[@]}; do
     if [[ ! ${dotenv_stack[$key]+_} ]]; then
         dotenv_stack[$key]="${!key}"
     fi
-done; unset key
+done
 
 ## reset every preserved key that is not in .env
 for key in ${!dotenv_stack[@]}; do
@@ -45,9 +43,18 @@ for key in ${!dotenv_stack[@]}; do
         export $key="${dotenv_stack[$key]}"
         unset "dotenv_stack[$key]"
     fi
-done; unset key
-
-unset dotenv_keys
+done
 
 # Load new environment variables
 source ./.env
+
+# helper function for deactivation
+source /dev/stdin <<EOF
+function reset_dotenv_stack() {
+    $(declare -p dotenv_stack)
+    for key in \${!dotenv_stack[@]}; do
+        export \$key="\${dotenv_stack[\$key]}"
+    done
+};
+EOF
+export -f reset_dotenv_stack
